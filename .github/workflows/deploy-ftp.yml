@@ -1,0 +1,35 @@
+# Livegang: lädt die Seite per FTP auf den Webspace der Kundin.
+# Läuft NUR manuell (Actions → "Live (FTP)" → Run workflow), damit nichts
+# versehentlich live geht.
+#
+# Einmalig einrichten: Repo → Settings → Secrets and variables → Actions:
+#   FTP_SERVER     z. B. ftp.example.at
+#   FTP_USERNAME
+#   FTP_PASSWORD
+#   FTP_SERVER_DIR z. B. /httpdocs/  (Zielordner auf dem Server, mit / am Ende)
+name: Live (FTP)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Seite zusammenstellen
+        run: |
+          mkdir _site
+          cp *.html _site/
+          cp -r assets _site/
+
+      - name: Per FTP hochladen
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ${{ secrets.FTP_SERVER_DIR }}
+          local-dir: ./_site/
+          protocol: ftps
